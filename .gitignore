@@ -1,0 +1,21 @@
+# Rust build
+target/
+*.rs.bk
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Binaries (packages in dist/packages/ are exceptions, tracked via git-lfs or manual)
+*.exe
+*.dll
+*.so
+*.dylib

@@ -1,0 +1,64 @@
+#!/bin/bash
+# iConnect CLI Wrapper
+# Simplifies common iConnect operations
+
+BIN_DIR="/opt/iconnect"
+CONFIG_DIR="/etc/iconnect"
+
+case "$1" in
+    server-start)
+        shift
+        exec "$BIN_DIR/iconnectd" -c "$CONFIG_DIR/server.toml" \
+            --rpc-portal tcp://127.0.0.1:15888 "$@"
+        ;;
+    server-start-web)
+        shift
+        exec "$BIN_DIR/iconnect-web" \
+            --db /var/lib/iconnect/iconnect.db \
+            --rpc-portal tcp://127.0.0.1:15888 \
+            --web-listen 0.0.0.0:3000 "$@"
+        ;;
+    client-connect)
+        SERVER="${2:-}"
+        if [ -z "$SERVER" ]; then
+            echo "Usage: iconnect client-connect <SERVER_IP:PORT>"
+            exit 1
+        fi
+        exec "$BIN_DIR/iconnectd" \
+            --disable-p2p \
+            --no-listener \
+            --disable-udp-hole-punching \
+            --disable-tcp-hole-punching \
+            --disable-sym-hole-punching \
+            --disable-upnp \
+            --default-protocol tcp \
+            -p "tcp://${SERVER}" \
+            --network-name iconnect \
+            --network-secret iconnect-default-secret \
+            "$@"
+        ;;
+    status)
+        "$BIN_DIR/iconnect-cli" node info 2>/dev/null || echo "iconnectd not running"
+        ;;
+    peers)
+        "$BIN_DIR/iconnect-cli" peer list 2>/dev/null || echo "iconnectd not running"
+        ;;
+    routes)
+        "$BIN_DIR/iconnect-cli" route list 2>/dev/null || echo "iconnectd not running"
+        ;;
+    *)
+        echo "iConnect CLI"
+        echo ""
+        echo "Server Commands:"
+        echo "  server-start           Start Core server"
+        echo "  server-start-web       Start Web management"
+        echo ""
+        echo "Client Commands:"
+        echo "  client-connect <IP:PORT>  Connect to Core server"
+        echo ""
+        echo "Status Commands:"
+        echo "  status                 Show node status"
+        echo "  peers                  List connected peers"
+        echo "  routes                 Show routing table"
+        ;;
+esac
