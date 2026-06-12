@@ -95,3 +95,5 @@ iconnect/
 ## 许可证
 
 基于 EasyTier 二次开发，继承原项目许可证。
+
+202606122220 Fix Website Capcha
