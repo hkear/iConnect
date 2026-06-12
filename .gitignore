@@ -4,7 +4,10 @@ target/
 
 # Node
 node_modules/
-dist/
+
+# Distribution (keep only packages/)
+dist/*
+!dist/packages/
 
 # IDE
 .idea/
@@ -13,9 +16,3 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
-
-# Binaries (packages in dist/packages/ are exceptions, tracked via git-lfs or manual)
-*.exe
-*.dll
-*.so
-*.dylib
