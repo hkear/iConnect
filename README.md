@@ -48,35 +48,51 @@ iconnectd \
   --peers tcp://服务器IP:1993
 ```
 
+## Web 控制端
+
+```
+地址: http://服务器IP:1994
+账户: admin
+密码: admin888
+```
+
+- 首次登录后请立即修改密码
+- 注册功能已关闭，仅允许管理员账户
+- 如需重置密码，SSH 到服务器执行: `python3 /opt/iconnect/reset-pwd.py`
+
+## 端口说明
+
+| 端口 | 服务 | 说明 |
+|------|------|------|
+| 1993 | Core 组网 | 客户端连接端口 |
+| 1994 | Web 前端 | 管理面板 |
+
 ## 目录结构
 
 ```
 iconnect/
 ├── README.md
-├── dist/packages/           # 安装包
-│   ├── iconnect-server-v1.0.0.tar.gz
-│   ├── iconnect-client-v1.0.0-x86_64.tar.gz
-│   ├── iconnect-client-v1.0.0-aarch64.tar.gz
-│   └── docs/
-│       ├── CLI.md           # 命令行使用手册
-│       └── WEB.md           # Web 控制端使用手册
-├── deploy/                  # 安装脚本源码
-│   ├── install-server.sh
-│   ├── install-client.sh
-│   └── build-all.sh
-├── iconnectd/               # Core 源码 (Rust)
-└── iconnect-web/            # Web 管理端源码 (Rust + Vue)
+├── deploy/                  # 部署脚本与配置
+│   ├── install-server.sh     # 服务端一键安装
+│   ├── install-client.sh     # 客户端一键安装
+│   ├── build-all.sh          # 源码构建脚本
+│   ├── proxy.py              # Web 代理（注入设备数据）
+│   ├── reset-pwd.py          # 密码重置脚本
+│   └── iconnect.db           # 数据库模板
+├── dist/packages/            # 编译好的安装包
+├── iconnectd/                # Core 源码 (Rust)
+└── iconnect-web/             # Web 管理端源码 (Rust + Vue)
 ```
 
 ## 核心特性
 
 - **纯中心化转发**：100% 流量经 Core 中转，无 P2P
-- **单端口**：仅需开放 1 个 TCP 端口
+- **单端口**：仅需开放 1 个 TCP 端口（1993）
 - **适配弱网**：无需 NAT 打洞，穿透多层路由
 - **DHCP 自动分配 IP**：客户端连上即获虚拟 IP
 - **跨平台**：Linux x86_64 / OpenWrt aarch64
-- **CLI 管理**：命令行查询状态、节点、路由
-- **Web 控制端**：可视化管理设备、配置下发、设备审批
+- **Web 控制端**：Dashboard 设备数量、Device List 设备状态
+- **设备数据注入**：Web 面板显示真实 CLI peer list 数据
 - **轻量化**：适配 OpenWrt 低配置路由器
 
 ## 平台支持
@@ -87,6 +103,25 @@ iconnect/
 | OpenWrt | aarch64 | 客户端 |
 | 其他 Linux | x86_64 | 客户端 |
 
+## 管理命令
+
+```bash
+# 服务管理
+systemctl start/stop/status iconnectd
+systemctl start/stop/status iconnect-web
+
+# 查看日志
+journalctl -u iconnectd -f
+tail -f /var/log/iconnectd.log
+
+# 重置密码
+python3 /opt/iconnect/reset-pwd.py
+
+# 设备状态
+iconnect-cli peer list
+iconnect-cli route list
+```
+
 ## 文档
 
 - [CLI 命令行手册](dist/packages/docs/CLI.md)
@@ -94,4 +129,4 @@ iconnect/
 
 ## 许可证
 
-基于 EasyTier 二次开发，继承原项目许可证。
+基于 EasyTier v2.6.4 二次开发，继承原项目 MPL-2.0 许可证。

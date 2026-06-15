@@ -1,112 +1,121 @@
 # iConnect Web 控制端使用手册
 
-## 概述
-
-Web 控制端提供可视化的设备管理、网络配置和状态监控。基于 Vue 3 + PrimeVue，支持桌面和移动端。
+## 访问与账户
 
 ```
-浏览器 ──HTTP──▶ iconnect-web ──RPC──▶ iconnectd (Core)
-                 ├── RESTful API
-                 ├── 用户认证
-                 ├── SQLite 持久化
-                 └── 内嵌 Vue SPA 前端
+地址: http://服务器IP:1994
+账户: admin
+密码: admin888
 ```
 
-## 一、启动
+**首次登录后请立即修改密码。** 注册功能已关闭。
+
+忘记密码时，SSH 到服务器执行：
 
 ```bash
-/opt/iconnect/iconnect-web \
-  --db /var/lib/iconnect/iconnect.db \
-  --api-server-port 11211 \
-  --web-server-port 1994
+python3 /opt/iconnect/reset-pwd.py
 ```
 
-### 参数
+## 架构
 
-| 参数 | 环境变量 | 说明 | 默认值 |
-|------|----------|------|--------|
-| `-d` / `--db` | `IC_WEB_DB` | SQLite 数据库路径 | `et.db` |
-| `-a` / `--api-server-port` | `IC_API_SERVER_PORT` | REST API 端口 | `11211` |
-| `-l` / `--web-server-port` | `IC_WEB_SERVER_PORT` | Web 前端端口 | 无 |
-| `-c` / `--config-server-port` | `IC_CONFIG_SERVER_PORT` | 设备配置下发端口 | `22020` |
+```
+浏览器 ──HTTP──▶ Python 代理 (1994)
+                 ├── /api/v1/summary  → 注入真实设备数量
+                 ├── /api/v1/machines → 注入真实设备列表
+                 ├── /api/*           → iconnect-web API (1996)
+                 └── 其他             → iconnect-web 前端 (1995)
+```
 
-## 二、访问与登录
+## 功能页面
 
-浏览器打开 `http://<服务器IP>:1994`，首次使用先注册管理员账户。
+| 页面 | 说明 |
+|------|------|
+| Dashboard | 显示设备总数（来自 CLI peer list） |
+| Device List | 显示在线设备列表 |
+| Device 详情 | 设备信息和网络配置 |
 
-## 三、功能页面
+## 设备数据显示
 
-| 页面 | 路径 | 功能 |
-|------|------|------|
-| 仪表盘 | `/dashboard` | 设备总数、在线状态概览 |
-| 设备列表 | `/deviceList` | 卡片式设备展示，排序/搜索/详情 |
-| 设备管理 | `/deviceList/device/:id` | 远程配置、网络实例管理 |
-| 配置生成器 | `/config_generator` | Web 表单生成 TOML 配置 |
-| 网络拓扑 | (NetworkChart) | 节点连接关系可视化 |
-| ACL 管理 | (AclManager) | 访问控制规则编辑 |
+Web 面板从 `iconnect-cli peer list` 实时获取设备数据并注入到 API 响应中。Dashboard 的设备数量和 Device List 的设备列表均反映真实的网络连接状态。
 
-## 四、设备审批
-
-iConnect 特有的设备接入审批流程：
-
-1. 新设备发起连接 → 自动注册为**待审批**
-2. 管理员在设备列表看到待审批卡片
-3. 点击**批准**可分配 IP 和别名
-4. 点击**拒绝**禁止接入
-
-### API 接口
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| `GET` | `/api/v1/devices` | 列出所有设备及状态 |
-| `GET` | `/api/v1/devices/pending` | 列出待审批设备 |
-| `POST` | `/api/v1/devices/:id/approve` | 审批，Body: `{"assigned_ip":"10.144.0.x","alias":"别名"}` |
-| `POST` | `/api/v1/devices/:id/reject` | 拒绝 |
-| `POST` | `/api/v1/devices/:id/kick` | 强制下线 |
-
-## 五、其他 REST API
-
-### 认证
+## 管理接口
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | `POST` | `/api/v1/auth/login` | 登录 |
-| `POST` | `/api/v1/auth/register` | 注册 |
-| `GET` | `/api/v1/auth/logout` | 登出 |
-
-### 设备与配置管理
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
+| `POST` | `/api/v1/auth/register` | 注册（已关闭） |
+| `PUT` | `/api/v1/auth/password` | 修改密码（需登录） |
+| `GET` | `/api/v1/summary` | 设备总数 |
 | `GET` | `/api/v1/machines` | 设备列表 |
-| `POST` | `/api/v1/machines/:id/networks` | 部署网络配置到设备 |
-| `GET` | `/api/v1/machines/:id/networks/info` | 设备网络运行信息 |
-| `POST` | `/api/v1/generate-config` | 生成 TOML 配置 |
-| `POST` | `/api/v1/parse-config` | 解析 TOML 配置 |
 
-## 六、nginx 反代示例
+## 服务管理
 
-```nginx
-server {
-    listen 443 ssl;
-    server_name iconnect.example.com;
+```bash
+# 启动/停止
+systemctl start/stop iconnect-web
+systemctl start/stop iconnect-proxy
 
-    ssl_certificate /etc/ssl/iconnect.crt;
-    ssl_certificate_key /etc/ssl/iconnect.key;
+# 查看状态
+systemctl status iconnect-web
+systemctl status iconnect-proxy
 
-    location / {
-        proxy_pass http://127.0.0.1:1994;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+# 日志
+tail -f /var/log/iconnect-web.log
+tail -f /var/log/iconnect-proxy.log
 ```
 
-## 七、安全建议
+## 端口说明
 
-1. 生产环境通过 nginx 反代配置 HTTPS
-2. 修改默认 Web 端口（1994）
-3. 防火墙仅允许可信 IP 访问 Web 端口
-4. 定期更新 `network_secret` 并重新分发
+| 端口 | 服务 | 用途 |
+|------|------|------|
+| 1994 | Python 代理 | 前端入口，注入设备数据 |
+| 1995 | iconnect-web | 前端静态文件 |
+| 1996 | iconnect-web | REST API |
+
+## 数据库
+
+```
+路径: /var/lib/iconnect/iconnect.db
+类型: SQLite
+```
+
+### 相关表
+
+| 表 | 说明 |
+|----|------|
+| users | 用户账户和密码哈希（Argon2ID） |
+| users_groups | 用户-权限组关联 |
+| groups | 权限组（users / admins） |
+| permissions | 权限定义（sessions / devices） |
+
+### 手动管理用户
+
+```bash
+# 查看所有用户
+sqlite3 /var/lib/iconnect/iconnect.db "SELECT id, username FROM users;"
+
+# 重置密码为 admin888
+python3 /opt/iconnect/reset-pwd.py
+
+# 删除用户
+sqlite3 /var/lib/iconnect/iconnect.db "DELETE FROM users WHERE username='xxx';"
+```
+
+## 部署结构
+
+```
+/opt/iconnect/
+├── iconnectd              # Core 守护进程
+├── iconnect-web           # Web 管理端（含内嵌前端）
+├── iconnect-cli           # 命令行工具
+├── proxy.py               # 1994 代理
+└── reset-pwd.py           # 密码重置脚本
+
+/etc/systemd/system/
+├── iconnectd.service
+├── iconnect-web.service
+└── iconnect-proxy.service
+
+/var/lib/iconnect/
+└── iconnect.db            # SQLite 数据库
+```
