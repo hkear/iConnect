@@ -23,8 +23,7 @@ Core Server (公网 IP, TCP 单端口)
 **防火墙要求**: 开放 TCP 1993（组网）、1994（Web）
 
 ```bash
-# 1. 下载并解压
-wget https://git.vhs.3shine.com/kay/iconnect/releases/download/v1.1.1/iconnect-server-v1.1.1.tar.gz
+# 1. 下载服务端安装包并解压
 tar xzf iconnect-server-v1.1.1.tar.gz
 
 # 2. 交互式安装（可自定义组网名称、密钥、端口）
@@ -78,8 +77,7 @@ systemctl enable --now iconnect-proxy
 ### 二、客户端 x86_64（Linux 服务器 / 虚拟机）
 
 ```bash
-# 1. 下载并解压
-wget https://git.vhs.3shine.com/kay/iconnect/releases/download/v1.1.1/iconnect-client-v1.1.1-x86_64.tar.gz
+# 1. 下载客户端安装包并解压
 tar xzf iconnect-client-v1.1.1-x86_64.tar.gz
 
 # 2. 命令行模式安装（非交互）
@@ -94,9 +92,8 @@ sudo bash install.sh
 ### 三、客户端 aarch64（OpenWrt 路由器）
 
 ```bash
-# 1. 下载并解压（在 OpenWrt 上执行）
-wget -O /tmp/iconnect.tar.gz https://git.vhs.3shine.com/kay/iconnect/releases/download/v1.1.1/iconnect-client-v1.1.1-aarch64.tar.gz
-cd /tmp && tar xzf iconnect.tar.gz
+# 1. 下载客户端安装包并解压（在 OpenWrt 上执行）
+tar xzf iconnect-client-v1.1.1-aarch64.tar.gz
 
 # 2. 命令行模式安装
 sh install.sh 服务器IP 1993 组网名称 组网密钥
