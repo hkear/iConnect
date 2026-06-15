@@ -14,38 +14,115 @@ Core Server (公网 IP, TCP 单端口)
 全部流量: Client A → Core → Client B, 禁止 Client 之间直连
 ```
 
-## 快速开始
+## 安装指南
 
-### 服务端（公网服务器）
+### 一、服务端 + Web 管理端（x86_64）
+
+**适用**: Ubuntu 20.04+ / Debian 11+，有公网 IP 的服务器
+
+**防火墙要求**: 开放 TCP 1993（组网）、1994（Web）
 
 ```bash
-# 方式一：一键安装
-tar xzf iconnect-server-v1.0.0.tar.gz
+# 1. 下载并解压
+wget https://git.vhs.3shine.com/kay/iconnect/releases/download/v1.1.1/iconnect-server-v1.1.1.tar.gz
+tar xzf iconnect-server-v1.1.1.tar.gz
+
+# 2. 交互式安装（可自定义组网名称、密钥、端口）
 sudo bash install.sh
 
-# 方式二：直接运行
-iconnectd \
-  --network-name mynet --network-secret mykey \
-  --ipv4 10.144.0.1 --dhcp \
-  --listeners tcp://0.0.0.0:1993 \
-  --default-protocol tcp \
-  --disable-p2p --disable-udp-hole-punching --disable-upnp \
-  --latency-first --multi-thread --relay-all-peer-rpc
+# 3. 安装完成后自动启动，输出连接信息
 ```
 
-### 客户端（OpenWrt / Linux）
+**安装后服务**:
+
+| 服务 | 端口 | systemd |
+|------|------|---------|
+| iconnectd (Core) | 1993 | `systemctl start/stop iconnectd` |
+| iconnect-web | 1996 (内部) | `systemctl start/stop iconnect-web` |
+| iconnect-proxy | 1994 (前端) | `systemctl start/stop iconnect-proxy` |
+
+**Web 管理端**:
+
+```
+地址: http://服务器IP:1994
+账户: admin
+密码: admin888
+```
+
+首次登录后请修改密码。注册已关闭。忘记密码执行 `python3 /opt/iconnect/reset-pwd.py`。
+
+**手动部署 Web**（如果 install.sh 未包含）:
 
 ```bash
-# 一键安装
-tar xzf iconnect-client-v1.0.0-*.tar.gz
-sh install.sh
+# 上传 proxy.py 和 reset-pwd.py 到 /opt/iconnect/
+# 安装 Python 依赖
+pip3 install argon2-cffi --break-system-packages
 
-# 或直接运行
-iconnectd \
-  --network-name mynet --network-secret mykey \
-  --disable-p2p --no-listener --dhcp \
-  --default-protocol tcp \
-  --peers tcp://服务器IP:1993
+# 创建 systemd 服务
+cat > /etc/systemd/system/iconnect-proxy.service << 'EOF'
+[Unit]
+Description=iConnect Web Proxy
+After=network.target iconnect-web.service
+[Service]
+Type=simple
+ExecStart=python3 /opt/iconnect/proxy.py 1994
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now iconnect-proxy
+```
+
+### 二、客户端 x86_64（Linux 服务器 / 虚拟机）
+
+```bash
+# 1. 下载并解压
+wget https://git.vhs.3shine.com/kay/iconnect/releases/download/v1.1.1/iconnect-client-v1.1.1-x86_64.tar.gz
+tar xzf iconnect-client-v1.1.1-x86_64.tar.gz
+
+# 2. 命令行模式安装（非交互）
+sudo bash install.sh 服务器IP 1993 组网名称 组网密钥
+
+# 或交互模式
+sudo bash install.sh
+```
+
+安装后 `systemctl start/stop iconnectd` 管理客户端。虚拟 IP 由 DHCP 自动分配。
+
+### 三、客户端 aarch64（OpenWrt 路由器）
+
+```bash
+# 1. 下载并解压（在 OpenWrt 上执行）
+wget -O /tmp/iconnect.tar.gz https://git.vhs.3shine.com/kay/iconnect/releases/download/v1.1.1/iconnect-client-v1.1.1-aarch64.tar.gz
+cd /tmp && tar xzf iconnect.tar.gz
+
+# 2. 命令行模式安装
+sh install.sh 服务器IP 1993 组网名称 组网密钥
+
+# 或交互模式
+sh install.sh
+```
+
+安装后 `/etc/init.d/iconnect start/stop` 管理客户端。
+
+### 四、防火墙配置
+
+| 端口 | 协议 | 方向 | 说明 |
+|------|------|------|------|
+| 1993 | TCP | 入站 | Core 组网，客户端连接 |
+| 1994 | TCP | 入站 | Web 管理面板 |
+
+```bash
+# UFW
+sudo ufw allow 1993/tcp
+sudo ufw allow 1994/tcp
+
+# firewalld
+sudo firewall-cmd --add-port=1993/tcp --permanent
+sudo firewall-cmd --add-port=1994/tcp --permanent
+sudo firewall-cmd --reload
 ```
 
 ## Web 控制端
