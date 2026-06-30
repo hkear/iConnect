@@ -24,7 +24,7 @@ Core Server (公网 IP, TCP 单端口)
 
 ```bash
 # 1. 下载服务端安装包并解压
-tar xzf iconnect-server-v1.1.1-x86_64.tar.gz
+tar xzf iconnect-server-v1.1.2-x86_64.tar.gz
 
 # 2. 交互式安装（可自定义组网名称、密钥、端口）
 sudo bash install.sh
@@ -78,7 +78,7 @@ systemctl enable --now iconnect-proxy
 
 ```bash
 # 1. 下载客户端安装包并解压
-tar xzf iconnect-client-v1.1.1-x86_64.tar.gz
+tar xzf iconnect-client-v1.1.2-x86_64.tar.gz
 
 # 2. 命令行模式安装（非交互）
 sudo bash install.sh 服务器IP 1993 组网名称 组网密钥
@@ -93,7 +93,7 @@ sudo bash install.sh
 
 ```bash
 # 1. 下载客户端安装包并解压（在 OpenWrt / ARM64 Linux 上执行）
-tar xzf iconnect-client-v1.1.1-aarch64.tar.gz
+tar xzf iconnect-client-v1.1.2-aarch64.tar.gz
 
 # 2. 命令行模式安装
 sh install.sh 服务器IP 1993 组网名称 组网密钥

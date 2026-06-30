@@ -25,7 +25,7 @@ Traffic Rule: Client A → Core → Client B, direct connections between clients
 
 ```Plain Text
 # 1. Download and extract the server installation package
-tar xzf iconnect-server-v1.1.1-x86_64.tar.gz
+tar xzf iconnect-server-v1.1.2-x86_64.tar.gz
 
 # 2. Interactive installation (customizable network name, secret key and port)
 sudo bash install.sh
@@ -82,7 +82,7 @@ systemctl enable --now iconnect-proxy
 
 ```Plain Text
 # 1. Download and extract the client installation package
-tar xzf iconnect-client-v1.1.1-x86_64.tar.gz
+tar xzf iconnect-client-v1.1.2-x86_64.tar.gz
 
 # 2. Non-interactive command line installation
 sudo bash install.sh ServerIP 1993 NetworkName NetworkKey
@@ -100,7 +100,7 @@ Execute all commands on your OpenWrt / ARM64 Linux device
 
 ```Plain Text
 # 1. Download and extract the client installation package
-tar xzf iconnect-client-v1.1.1-aarch64.tar.gz
+tar xzf iconnect-client-v1.1.2-aarch64.tar.gz
 
 # 2. Command line installation
 sh install.sh ServerIP 1993 NetworkName NetworkKey

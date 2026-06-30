@@ -1,9 +1,3 @@
-<<<<<<< HEAD
 [toolchain]
 channel = "1.95"
 profile = "minimal"
-=======
-[toolchain]
-channel = "1.95"
-profile = "minimal"
->>>>>>> master
