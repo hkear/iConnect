@@ -21,21 +21,13 @@ Traffic Rule: Client A → Core → Client B, direct connections between clients
 
 ### 1\. Server \& Web Dashboard \(x86\_64\)
 
-<<<<<<< HEAD
-**Compatibility**: Ubuntu 20\.04\+ / Debian 11\+, servers with public IP
-=======
 **Compatibility**: Most Linux x86_64 distributions (binaries use musl static linking, no system GLIBC dependency)
->>>>>>> master
 
 **Firewall Requirements**: Open TCP port 1993 \(Networking\) and 1994 \(Web Panel\)
 
 ```Plain Text
 # 1. Download and extract the server installation package
-<<<<<<< HEAD
-tar xzf iconnect-server-v1.1.1.tar.gz
-=======
 tar xzf iconnect-server-v1.1.1-x86_64.tar.gz
->>>>>>> master
 
 # 2. Interactive installation (customizable network name, secret key and port)
 sudo bash install.sh
@@ -104,9 +96,9 @@ sudo bash install.sh
 
 Manage client service via `systemctl start/stop iconnectd`\. Virtual IP is automatically assigned by built\-in DHCP\.
 
-### 3\. aarch64 Client \(OpenWrt Router\)
+### 3\. aarch64 Client \(OpenWrt / ARM64 Linux\)
 
-Execute all commands on your OpenWrt device
+Execute all commands on your OpenWrt / ARM64 Linux device
 
 ```Plain Text
 # 1. Download and extract the client installation package
@@ -168,12 +160,6 @@ Password: admin888
 ```Plain Text
 iconnect/
 ├── README.md
-<<<<<<< HEAD
-├── deploy/                  # Deployment scripts and configurations
-│   ├── install-server.sh     # One-click server installation script
-│   ├── install-client.sh     # One-click client installation script
-│   ├── build-all.sh          # Source build script
-=======
 ├── .cargo/                   # musl static linker configuration
 │   └── config.toml
 ├── deploy/                   # Deployment scripts and configurations
@@ -181,7 +167,6 @@ iconnect/
 │   ├── install-client.sh     # One-click client installation script
 │   ├── build-all.sh          # Source build script (musl static)
 │   ├── Dockerfile.build      # Fixed build environment image
->>>>>>> master
 │   ├── proxy.py              # Web proxy (device data injection)
 │   ├── reset-pwd.py          # Password reset script
 │   └── iconnect.db           # Database template
@@ -201,11 +186,7 @@ iconnect/
 
 - **Automatic DHCP IP Allocation**: Virtual IP assigned automatically once clients connect
 
-<<<<<<< HEAD
-- **Cross\-Platform**: Supports Linux x86\_64 / OpenWrt aarch64
-=======
 - **Cross\-Platform**: Linux x86_64 / OpenWrt aarch64, both use musl static linking
->>>>>>> master
 
 - **Web Dashboard**: Displays device quantity and online status list
 
@@ -217,15 +198,9 @@ iconnect/
 
 |Platform|Architecture|Support Status|
 |---|---|---|
-<<<<<<< HEAD
-|Ubuntu / Debian|x86\_64|Server \+ Client|
-|OpenWrt|aarch64|Client Only|
-|Other Linux|x86\_64|Client Only|
-=======
 |Linux x86_64 (musl static)|x86_64|Server + Client|
 |Linux ARM64 / OpenWrt (musl static)|aarch64|Client Only|
 |Other Linux x86_64|x86_64|Client Only|
->>>>>>> master
 
 ## Management Commands
 
@@ -255,6 +230,4 @@ iconnect-cli route list
 
 ## License
 
-Secondary development based on EasyTier v2\.6\.4, inheriting the upstream MPL\-2\.0 license\.
-
-
+Secondary development based on EasyTier v2\.6\.4, inheriting the upstream MPL\-2.0 license\.
