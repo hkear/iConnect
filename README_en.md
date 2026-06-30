@@ -1,5 +1,3 @@
-# README\_EN\.md
-
 \# iConnect — Cross\-Site Intranet Networking System
 
 A pure centralized relay\-based virtual LAN tool for cross\-site networking\. All device traffic is relayed through the Core server without P2P hole punching, adapting to multi\-layer NAT, weak network, and port\-blocked environments\.
@@ -224,9 +222,9 @@ iconnect-cli route list
 
 ## Documentation
 
-- [CLI Command Manual](https://www.doubao.cn)
+- [CLI Command Manual](dist/packages/docs/CLI.md)
 
-- [Web Dashboard Manual](https://www.doubao.cn)
+- [Web Dashboard Manual](dist/packages/docs/WEB.md)
 
 ## License
 
