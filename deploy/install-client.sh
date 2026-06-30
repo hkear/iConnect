@@ -14,7 +14,7 @@ RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC
 [ -z "$TERM" ] || [ "$TERM" = "dumb" ] && { RED=''; GREEN=''; YELLOW=''; CYAN=''; NC=''; BOLD=''; }
 
 echo "${CYAN}${BOLD}"
-echo "  iConnect Client v1.0.0 -- 异地组网客户端"
+echo "  iConnect Client v1.1.1 -- 异地组网客户端"
 echo "${NC}"
 
 [ "$(id -u)" -ne 0 ] && { echo "${RED}[错误] 请使用 root 运行${NC}"; exit 1; }

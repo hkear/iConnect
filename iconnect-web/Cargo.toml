@@ -1,6 +1,6 @@
 [package]
 name = "iconnect-web"
-version = "1.0.0"
+version = "1.1.1"
 edition.workspace = true
 description = "iConnect Web management server with device approval"
 

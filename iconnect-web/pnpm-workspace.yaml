@@ -1,0 +1,6 @@
+packages:
+  - 'frontend-lib'
+  - 'frontend'
+allowBuilds:
+  esbuild: true
+  vue-demi: true

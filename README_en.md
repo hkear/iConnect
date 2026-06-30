@@ -21,13 +21,13 @@ Traffic Rule: Client A → Core → Client B, direct connections between clients
 
 ### 1\. Server \& Web Dashboard \(x86\_64\)
 
-**Compatibility**: Ubuntu 20\.04\+ / Debian 11\+, servers with public IP
+**Compatibility**: Most Linux x86_64 distributions (binaries use musl static linking, no system GLIBC dependency)
 
 **Firewall Requirements**: Open TCP port 1993 \(Networking\) and 1994 \(Web Panel\)
 
 ```Plain Text
 # 1. Download and extract the server installation package
-tar xzf iconnect-server-v1.1.1.tar.gz
+tar xzf iconnect-server-v1.1.1-x86_64.tar.gz
 
 # 2. Interactive installation (customizable network name, secret key and port)
 sudo bash install.sh
@@ -160,10 +160,13 @@ Password: admin888
 ```Plain Text
 iconnect/
 ├── README.md
-├── deploy/                  # Deployment scripts and configurations
+├── .cargo/                   # musl static linker configuration
+│   └── config.toml
+├── deploy/                   # Deployment scripts and configurations
 │   ├── install-server.sh     # One-click server installation script
 │   ├── install-client.sh     # One-click client installation script
-│   ├── build-all.sh          # Source build script
+│   ├── build-all.sh          # Source build script (musl static)
+│   ├── Dockerfile.build      # Fixed build environment image
 │   ├── proxy.py              # Web proxy (device data injection)
 │   ├── reset-pwd.py          # Password reset script
 │   └── iconnect.db           # Database template
@@ -183,7 +186,7 @@ iconnect/
 
 - **Automatic DHCP IP Allocation**: Virtual IP assigned automatically once clients connect
 
-- **Cross\-Platform**: Supports Linux x86\_64 / OpenWrt aarch64
+- **Cross\-Platform**: Linux x86_64 / OpenWrt aarch64, both use musl static linking
 
 - **Web Dashboard**: Displays device quantity and online status list
 
@@ -195,9 +198,9 @@ iconnect/
 
 |Platform|Architecture|Support Status|
 |---|---|---|
-|Ubuntu / Debian|x86\_64|Server \+ Client|
-|OpenWrt|aarch64|Client Only|
-|Other Linux|x86\_64|Client Only|
+|Linux x86_64 (musl static)|x86_64|Server + Client|
+|Linux ARM64 / OpenWrt (musl static)|aarch64|Client Only|
+|Other Linux x86_64|x86_64|Client Only|
 
 ## Management Commands
 

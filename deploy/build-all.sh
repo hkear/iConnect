@@ -24,7 +24,7 @@ echo "  ║       musl static build                  ║"
 echo "  ╚══════════════════════════════════════════╝"
 echo -e "${NC}"
 
-# === 0. 读取版本号 ===
+# === 0. 读取版本号与 Rust 工具链 ===
 VERSION=$(grep -E '^version\s*=' "$PROJECT_ROOT/iconnectd/Cargo.toml" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
 if [ -z "$VERSION" ]; then
     echo -e "${RED}[错误] 无法从 iconnectd/Cargo.toml 读取版本号${NC}"
@@ -32,14 +32,20 @@ if [ -z "$VERSION" ]; then
 fi
 echo -e "       ${GREEN}✓${NC} 版本号: ${BOLD}${VERSION}${NC}"
 
+RUST_TOOLCHAIN=$(grep -E '^channel\s*=' "$PROJECT_ROOT/rust-toolchain.toml" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+RUST_TOOLCHAIN=${RUST_TOOLCHAIN:-stable}
+
 # === 1. 检查/安装 musl 工具链与 Rust target ===
 echo -e "${GREEN}[1/7]${NC} 检查 musl 交叉编译环境..."
 
 ensure_rustup_target() {
     local target="$1"
-    if ! rustup target list --installed | grep -q "^${target}\$"; then
-        echo "  安装 Rust target: $target"
-        rustup target add "$target"
+    if ! command -v rustup &>/dev/null; then
+        return 0
+    fi
+    if ! rustup target list --installed --toolchain "$RUST_TOOLCHAIN" 2>/dev/null | grep -q "^${target}\$"; then
+        echo "  安装 Rust target: $target (toolchain $RUST_TOOLCHAIN)"
+        rustup target add --toolchain "$RUST_TOOLCHAIN" "$target"
     fi
 }
 
@@ -86,6 +92,14 @@ export AR_x86_64_unknown_linux_musl="${MUSL_X86_DIR}/x86_64-linux-musl-ar"
 export CC_aarch64_unknown_linux_musl="${MUSL_AARCH64_DIR}/aarch64-linux-musl-gcc"
 export CXX_aarch64_unknown_linux_musl="${MUSL_AARCH64_DIR}/aarch64-linux-musl-g++"
 export AR_aarch64_unknown_linux_musl="${MUSL_AARCH64_DIR}/aarch64-linux-musl-ar"
+
+# 让 bindgen 在 musl 交叉编译时能定位到 gcc 与 musl 头文件（kcp-sys 等依赖需要）
+MUSL_X86_SYSROOT="$(dirname "$MUSL_X86_DIR")/x86_64-linux-musl"
+MUSL_AARCH64_SYSROOT="$(dirname "$MUSL_AARCH64_DIR")/aarch64-linux-musl"
+MUSL_X86_GCC_INC="${MUSL_X86_DIR}/../lib/gcc/x86_64-linux-musl/11.2.1/include"
+MUSL_AARCH64_GCC_INC="${MUSL_AARCH64_DIR}/../lib/gcc/aarch64-linux-musl/11.2.1/include"
+export BINDGEN_EXTRA_CLANG_ARGS_X86_64_UNKNOWN_LINUX_MUSL="--sysroot=${MUSL_X86_SYSROOT} -I${MUSL_X86_GCC_INC} -I${MUSL_X86_SYSROOT}/include"
+export BINDGEN_EXTRA_CLANG_ARGS_AARCH64_UNKNOWN_LINUX_MUSL="--sysroot=${MUSL_AARCH64_SYSROOT} -I${MUSL_AARCH64_GCC_INC} -I${MUSL_AARCH64_SYSROOT}/include"
 
 ensure_rustup_target x86_64-unknown-linux-musl
 ensure_rustup_target aarch64-unknown-linux-musl
@@ -140,29 +154,39 @@ echo -e "       ${GREEN}✓${NC} Rust: $(rustc --version)"
 echo -e "${GREEN}[4/7]${NC} 构建前端..."
 cd "$PROJECT_ROOT/iconnect-web"
 
-# Build frontend-lib
-cd frontend-lib
 pnpm config set registry https://registry.npmjs.org/ 2>/dev/null || true
-pnpm install --no-frozen-lockfile 2>&1 | tail -3
-pnpm build 2>&1 | tail -3 || echo "  frontend-lib build skipped (dev mode)"
-
-# Build main frontend
-cd ../frontend
-pnpm config set registry https://registry.npmjs.org/ 2>/dev/null || true
-pnpm install --no-frozen-lockfile 2>&1 | tail -3
-npx vite build 2>&1 | tail -5
+pnpm install --no-frozen-lockfile 2>&1 | tail -5
+pnpm approve-builds --all 2>&1 | tail -5 || true
+pnpm rebuild 2>&1 | tail -5 || true
+pnpm -C frontend-lib exec vite build 2>&1 | tail -5 || echo "  frontend-lib build skipped (dev mode)"
+pnpm -C frontend exec vite build 2>&1 | tail -5
 
 echo -e "       ${GREEN}✓${NC} 前端构建完成"
+
+# 根据目标架构设置 kcp-sys bindgen 需要的额外头文件路径
+set_kcp_extra_headers() {
+    local target="$1"
+    case "$target" in
+        x86_64-unknown-linux-musl)
+            export KCP_SYS_EXTRA_HEADER_PATH="${MUSL_X86_DIR}/../lib/gcc/x86_64-linux-musl/11.2.1/include:${MUSL_X86_SYSROOT}/include"
+            ;;
+        aarch64-unknown-linux-musl)
+            export KCP_SYS_EXTRA_HEADER_PATH="${MUSL_AARCH64_DIR}/../lib/gcc/aarch64-linux-musl/11.2.1/include:${MUSL_AARCH64_SYSROOT}/include"
+            ;;
+    esac
+}
 
 # === 5. 构建 iconnectd (Core) ===
 echo -e "${GREEN}[5/7]${NC} 编译 iconnectd (Core)..."
 cd "$PROJECT_ROOT"
 
 echo "  -> x86_64-unknown-linux-musl"
+set_kcp_extra_headers x86_64-unknown-linux-musl
 cargo build --release -p iconnectd --target x86_64-unknown-linux-musl 2>&1 | tail -5
 echo -e "       ${GREEN}✓${NC} iconnectd x86_64: $(ls -lh target/x86_64-unknown-linux-musl/release/iconnectd | awk '{print $5}')"
 
 echo "  -> aarch64-unknown-linux-musl"
+set_kcp_extra_headers aarch64-unknown-linux-musl
 cargo build --release -p iconnectd --target aarch64-unknown-linux-musl 2>&1 | tail -5
 echo -e "       ${GREEN}✓${NC} iconnectd aarch64: $(ls -lh target/aarch64-unknown-linux-musl/release/iconnectd | awk '{print $5}')"
 
@@ -172,6 +196,7 @@ cd "$PROJECT_ROOT"
 
 # iconnect-web 目前主要随服务端发布在 x86_64 上
 # 如需在 aarch64 服务器上运行，可取消下行的 --target 限制
+set_kcp_extra_headers x86_64-unknown-linux-musl
 cargo build --release -p iconnect-web --features embed --target x86_64-unknown-linux-musl 2>&1 | tail -5
 echo -e "       ${GREEN}✓${NC} iconnect-web x86_64: $(ls -lh target/x86_64-unknown-linux-musl/release/iconnect-web | awk '{print $5}')"
 

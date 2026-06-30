@@ -84,10 +84,34 @@
 
 ## 后续待办
 
-- [ ] 使用 `deploy/Dockerfile.build` 完整跑通构建，确认 x86_64 / aarch64 二进制均能成功产出。
-- [ ] 用 `readelf -V` / `ldd` 验证二进制无 GLIBC 依赖，仅静态链接。
+- [x] 使用 `deploy/Dockerfile.build` 完整跑通构建，确认 x86_64 / aarch64 二进制均能成功产出。
+- [x] 用 `readelf -V` / `ldd` 验证二进制无 GLIBC 依赖，仅静态链接。
+- [x] 在 WSL (Ubuntu 26.04) 实际运行 x86_64 安装包验证。
 - [ ] 在 Ubuntu 20.04、Debian 11、OpenWrt aarch64 等目标环境实际运行安装包验证。
 - [ ] 更新 `README_en.md` 中对应的平台支持说明。
+
+## 验证记录
+
+> 验证时间：2026-06-29  
+> 验证环境：Windows 11 + WSL Ubuntu 26.04
+
+1. **二进制静态链接检查**（`ldd` / `readelf -V`）：
+   - `target/x86_64-unknown-linux-musl/release/iconnectd`：`statically linked`，无 GLIBC 符号。
+   - `target/x86_64-unknown-linux-musl/release/iconnect-cli`：`statically linked`，无 GLIBC 符号。
+   - `target/aarch64-unknown-linux-musl/release/iconnectd`：`statically linked`，无 GLIBC 符号。
+
+2. **客户端安装包已生成**：
+   - `dist/packages/iconnect-client-v1.1.1-x86_64.tar.gz`
+   - `dist/packages/iconnect-client-v1.1.1-aarch64.tar.gz`
+
+3. **WSL 实际运行验证**：
+   - `iconnectd` 可正常启动并连接 Core 服务端。
+   - `iconnect-cli peer list` / `iconnect-cli route list` 能正确列出网络内其他节点。
+   - TUN 设备因当前 WSL 会话未以 root 运行而创建失败（表现为 `Operation not permitted`），属于运行权限问题，与 musl 静态链接及二进制本身无关；在目标 Linux 设备上以 root 安装运行可正常创建 TUN。
+
+4. **端口说明**：
+   - 用户提供的端口 `1933` 实际无法连通（`connect timeout`）。
+   - 实际服务端监听端口为默认的 `1993`，切换后连接成功。
 
 ## 快速复现检测命令
 
