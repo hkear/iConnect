@@ -18,13 +18,21 @@ Core Server (公网 IP, TCP 单端口)
 
 ### 一、服务端 + Web 管理端（x86_64）
 
+<<<<<<< HEAD
 **适用**: Ubuntu 20.04+ / Debian 11+，有公网 IP 的服务器
+=======
+**适用**: 绝大多数 Linux x86_64 发行版（二进制使用 musl 静态链接，不依赖系统 GLIBC）
+>>>>>>> master
 
 **防火墙要求**: 开放 TCP 1993（组网）、1994（Web）
 
 ```bash
 # 1. 下载服务端安装包并解压
+<<<<<<< HEAD
 tar xzf iconnect-server-v1.1.1.tar.gz
+=======
+tar xzf iconnect-server-v1.1.1-x86_64.tar.gz
+>>>>>>> master
 
 # 2. 交互式安装（可自定义组网名称、密钥、端口）
 sudo bash install.sh
@@ -89,10 +97,17 @@ sudo bash install.sh
 
 安装后 `systemctl start/stop iconnectd` 管理客户端。虚拟 IP 由 DHCP 自动分配。
 
+<<<<<<< HEAD
 ### 三、客户端 aarch64（OpenWrt 路由器）
 
 ```bash
 # 1. 下载客户端安装包并解压（在 OpenWrt 上执行）
+=======
+### 三、客户端 aarch64（OpenWrt / ARM64 Linux）
+
+```bash
+# 1. 下载客户端安装包并解压（在 OpenWrt / ARM64 Linux 上执行）
+>>>>>>> master
 tar xzf iconnect-client-v1.1.1-aarch64.tar.gz
 
 # 2. 命令行模式安装
@@ -146,10 +161,20 @@ sudo firewall-cmd --reload
 ```
 iconnect/
 ├── README.md
+<<<<<<< HEAD
 ├── deploy/                  # 部署脚本与配置
 │   ├── install-server.sh     # 服务端一键安装
 │   ├── install-client.sh     # 客户端一键安装
 │   ├── build-all.sh          # 源码构建脚本
+=======
+├── .cargo/
+│   └── config.toml           # musl 静态链接器配置
+├── deploy/                   # 部署脚本与配置
+│   ├── install-server.sh     # 服务端一键安装
+│   ├── install-client.sh     # 客户端一键安装
+│   ├── build-all.sh          # 源码构建脚本（musl 静态）
+│   ├── Dockerfile.build      # 固定构建环境镜像
+>>>>>>> master
 │   ├── proxy.py              # Web 代理（注入设备数据）
 │   ├── reset-pwd.py          # 密码重置脚本
 │   └── iconnect.db           # 数据库模板
@@ -164,7 +189,11 @@ iconnect/
 - **单端口**：仅需开放 1 个 TCP 端口（1993）
 - **适配弱网**：无需 NAT 打洞，穿透多层路由
 - **DHCP 自动分配 IP**：客户端连上即获虚拟 IP
+<<<<<<< HEAD
 - **跨平台**：Linux x86_64 / OpenWrt aarch64
+=======
+- **跨平台**：Linux x86_64 / OpenWrt aarch64，均使用 musl 静态链接
+>>>>>>> master
 - **Web 控制端**：Dashboard 设备数量、Device List 设备状态
 - **设备数据注入**：Web 面板显示真实 CLI peer list 数据
 - **轻量化**：适配 OpenWrt 低配置路由器
@@ -173,9 +202,15 @@ iconnect/
 
 | 平台 | 架构 | 状态 |
 |------|------|------|
+<<<<<<< HEAD
 | Ubuntu / Debian | x86_64 | 服务端 + 客户端 |
 | OpenWrt | aarch64 | 客户端 |
 | 其他 Linux | x86_64 | 客户端 |
+=======
+| Linux x86_64（musl 静态链接） | x86_64 | 服务端 + 客户端 |
+| Linux ARM64 / OpenWrt（musl 静态链接） | aarch64 | 客户端 |
+| 其他 Linux x86_64 | x86_64 | 客户端 |
+>>>>>>> master
 
 ## 管理命令
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [workspace]
 resolver = "2"
 members = [
@@ -20,3 +21,27 @@ lto = true
 codegen-units = 1
 opt-level = 3
 strip = true
+=======
+[workspace]
+resolver = "2"
+members = [
+    "iconnectd",
+    "iconnect-web",
+]
+default-members = ["iconnectd", "iconnect-web"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.95"
+
+[profile.dev]
+panic = "unwind"
+debug = 2
+
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+opt-level = 3
+strip = true
+>>>>>>> master

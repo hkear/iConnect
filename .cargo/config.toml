@@ -1,0 +1,17 @@
+[target.x86_64-unknown-linux-musl]
+linker = "x86_64-linux-musl-gcc"
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-unknown-linux-musl]
+linker = "aarch64-linux-musl-gcc"
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[env]
+# 让依赖库（openssl、dbus、sqlite 等）的 build.rs 在 musl 交叉编译时使用 musl-gcc。
+# 这些变量会被 build-all.sh 在执行时覆盖为与目标架构对应的工具链。
+CC_x86_64_unknown_linux_musl = "x86_64-linux-musl-gcc"
+CXX_x86_64_unknown_linux_musl = "x86_64-linux-musl-g++"
+AR_x86_64_unknown_linux_musl = "x86_64-linux-musl-ar"
+CC_aarch64_unknown_linux_musl = "aarch64-linux-musl-gcc"
+CXX_aarch64_unknown_linux_musl = "aarch64-linux-musl-g++"
+AR_aarch64_unknown_linux_musl = "aarch64-linux-musl-ar"

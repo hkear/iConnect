@@ -1,0 +1,51 @@
+# iConnect musl 静态构建环境
+# 用法：
+#   docker build -f deploy/Dockerfile.build -t iconnect-builder .
+#   docker run --rm -v "$PWD":/workspace -w /workspace iconnect-builder bash deploy/build-all.sh
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo
+ENV PATH=/usr/local/cargo/bin:$PATH
+ENV NODE_MAJOR=22
+
+# 安装系统依赖与构建工具
+RUN apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends \
+        ca-certificates curl gnupg build-essential pkg-config \
+        libclang-dev clang cmake protobuf-compiler unzip git \
+        fontconfig fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 Node.js 22.x 与 pnpm
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y -qq nodejs \
+    && npm install -g pnpm \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 Rust（rust-toolchain.toml 会固定到 1.95）
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | sh -s -- -y --default-toolchain stable --profile minimal \
+    && . "$CARGO_HOME/env" \
+    && rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl
+
+# 安装 musl 交叉编译工具链（x86_64 / aarch64）
+WORKDIR /opt/musl
+RUN curl -fsSL https://musl.cc/x86_64-linux-musl-cross.tgz \
+    | tar xzf - \
+    && curl -fsSL https://musl.cc/aarch64-linux-musl-cross.tgz \
+    | tar xzf -
+
+ENV PATH="/opt/musl/x86_64-linux-musl-cross/bin:/opt/musl/aarch64-linux-musl-cross/bin:$PATH"
+
+# 让依赖的 C 库 build.rs 使用 musl 工具链
+ENV CC_x86_64_unknown_linux_musl=x86_64-linux-musl-gcc
+ENV CXX_x86_64_unknown_linux_musl=x86_64-linux-musl-g++
+ENV AR_x86_64_unknown_linux_musl=x86_64-linux-musl-ar
+ENV CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc
+ENV CXX_aarch64_unknown_linux_musl=aarch64-linux-musl-g++
+ENV AR_aarch64_unknown_linux_musl=aarch64-linux-musl-ar
+
+WORKDIR /workspace
+CMD ["bash", "deploy/build-all.sh"]
