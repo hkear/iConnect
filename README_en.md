@@ -17,11 +17,11 @@ Traffic Rule: Client A → Core → Client B, direct connections between clients
 
 ## Installation Guide
 
-### 1\. Server \& Web Dashboard \(x86\_64\)
+### 1\. Server \(x86\_64\)
 
 **Compatibility**: Most Linux x86_64 distributions (binaries use musl static linking, no system GLIBC dependency)
 
-**Firewall Requirements**: Open TCP port 1993 \(Networking\) and 1994 \(Web Panel\)
+**Firewall Requirements**: Only open TCP port 1993 \(Networking\)
 
 ```Plain Text
 # 1. Download and extract the server installation package
@@ -39,44 +39,6 @@ sudo bash install.sh
 |Service|Port|systemd Command|
 |---|---|---|
 |iconnectd \(Core\)|1993|`systemctl start/stop iconnectd`|
-|iconnect\-web|1996 \(Internal\)|`systemctl start/stop iconnect-web`|
-|iconnect\-proxy|1994 \(Frontend\)|`systemctl start/stop iconnect-proxy`|
-
-**Web Dashboard Access**
-
-```Plain Text
-URL: http://ServerIP:1994
-Username: admin
-Password: admin888
-
-```
-
-Please change the default password after your first login\. User registration is disabled\. Run the following command to reset password:`python3 /opt/iconnect/reset-pwd.py`\.
-
-**Manual Web Deployment \(If not included in install\.sh\)**
-
-```Plain Text
-# Upload proxy.py and reset-pwd.py to /opt/iconnect/
-# Install Python dependencies
-pip3 install argon2-cffi --break-system-packages
-
-# Create systemd service file
-cat > /etc/systemd/system/iconnect-proxy.service << 'EOF'
-[Unit]
-Description=iConnect Web Proxy
-After=network.target iconnect-web.service
-[Service]
-Type=simple
-ExecStart=python3 /opt/iconnect/proxy.py 1994
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-
-systemctl daemon-reload
-systemctl enable --now iconnect-proxy
-
-```
 
 ### 2\. x86\_64 Client \(Linux Server / Virtual Machine\)
 
@@ -117,41 +79,41 @@ Manage client service via `/etc/init.d/iconnect start/stop`\.
 |Port|Protocol|Direction|Description|
 |---|---|---|---|
 |1993|TCP|Inbound|Core network service for client connection|
-|1994|TCP|Inbound|Web management panel|
 
 ```Plain Text
 # UFW Firewall
 sudo ufw allow 1993/tcp
-sudo ufw allow 1994/tcp
 
 # firewalld
 sudo firewall-cmd --add-port=1993/tcp --permanent
-sudo firewall-cmd --add-port=1994/tcp --permanent
 sudo firewall-cmd --reload
 
 ```
 
-## Web Dashboard
+## Retrieve Network Key and Configuration
+
+The installation script writes configuration into the systemd service file\. You can retrieve the network key and settings using:
 
 ```Plain Text
-URL: http://ServerIP:1994
-Username: admin
-Password: admin888
+# View service startup arguments (includes network name, secret, virtual subnet, port)
+cat /etc/systemd/system/iconnectd.service
+
+# View runtime logs for connection details
+journalctl -u iconnectd -n 50
+
+# View assigned virtual IP and peer status
+iconnect-cli peer list
+iconnect-cli route list
 
 ```
 
-- Change the default password immediately after first login
-
-- User registration is closed, only admin accounts are allowed
-
-- To reset password, execute via SSH: `python3 /opt/iconnect/reset-pwd.py`
+The connection information required for client installation \(Server IP, port, network name, network secret\) is printed on screen when the server installation completes\. Please save it for later use\.
 
 ## Port Description
 
 |Port|Service|Description|
 |---|---|---|
 |1993|Core Network|Client connection port|
-|1994|Web Frontend|Management panel port|
 
 ## Directory Structure
 
@@ -165,12 +127,12 @@ iconnect/
 │   ├── install-client.sh     # One-click client installation script
 │   ├── build-all.sh          # Source build script (musl static)
 │   ├── Dockerfile.build      # Fixed build environment image
-│   ├── proxy.py              # Web proxy (device data injection)
-│   ├── reset-pwd.py          # Password reset script
+│   ├── proxy.py              # Web proxy (optional)
+│   ├── reset-pwd.py          # Password reset script (optional)
 │   └── iconnect.db           # Database template
 ├── dist/packages/            # Compiled installation packages
 ├── iconnectd/                # Core source code (Rust)
-└── iconnect-web/             # Web dashboard source code (Rust + Vue)
+└── iconnect-web/             # Web dashboard source code (Rust + Vue), optional component
 
 ```
 
@@ -186,9 +148,7 @@ iconnect/
 
 - **Cross\-Platform**: Linux x86_64 / OpenWrt aarch64, both use musl static linking
 
-- **Web Dashboard**: Displays device quantity and online status list
-
-- **Real Device Data Injection**: Web panel synchronizes real CLI peer list data
+- **CLI Management**: Manage and monitor via command line
 
 - **Lightweight**: Adaptable to low\-spec OpenWrt routers
 
@@ -205,14 +165,10 @@ iconnect/
 ```Plain Text
 # Service management
 systemctl start/stop/status iconnectd
-systemctl start/stop/status iconnect-web
 
 # View logs
 journalctl -u iconnectd -f
 tail -f /var/log/iconnectd.log
-
-# Reset password
-python3 /opt/iconnect/reset-pwd.py
 
 # Device status query
 iconnect-cli peer list
@@ -223,8 +179,6 @@ iconnect-cli route list
 ## Documentation
 
 - [CLI Command Manual](dist/packages/docs/CLI.md)
-
-- [Web Dashboard Manual](dist/packages/docs/WEB.md)
 
 ## License
 

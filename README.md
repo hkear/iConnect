@@ -16,11 +16,11 @@ Core Server (公网 IP, TCP 单端口)
 
 ## 安装指南
 
-### 一、服务端 + Web 管理端（x86_64）
+### 一、服务端（x86_64）
 
 **适用**: 绝大多数 Linux x86_64 发行版（二进制使用 musl 静态链接，不依赖系统 GLIBC）
 
-**防火墙要求**: 开放 TCP 1993（组网）、1994（Web）
+**防火墙要求**: 仅开放 TCP 1993（组网）
 
 ```bash
 # 1. 下载服务端安装包并解压
@@ -37,42 +37,6 @@ sudo bash install.sh
 | 服务 | 端口 | systemd |
 |------|------|---------|
 | iconnectd (Core) | 1993 | `systemctl start/stop iconnectd` |
-| iconnect-web | 1996 (内部) | `systemctl start/stop iconnect-web` |
-| iconnect-proxy | 1994 (前端) | `systemctl start/stop iconnect-proxy` |
-
-**Web 管理端**:
-
-```
-地址: http://服务器IP:1994
-账户: admin
-密码: admin888
-```
-
-首次登录后请修改密码。注册已关闭。忘记密码执行 `python3 /opt/iconnect/reset-pwd.py`。
-
-**手动部署 Web**（如果 install.sh 未包含）:
-
-```bash
-# 上传 proxy.py 和 reset-pwd.py 到 /opt/iconnect/
-# 安装 Python 依赖
-pip3 install argon2-cffi --break-system-packages
-
-# 创建 systemd 服务
-cat > /etc/systemd/system/iconnect-proxy.service << 'EOF'
-[Unit]
-Description=iConnect Web Proxy
-After=network.target iconnect-web.service
-[Service]
-Type=simple
-ExecStart=python3 /opt/iconnect/proxy.py 1994
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-
-systemctl daemon-reload
-systemctl enable --now iconnect-proxy
-```
 
 ### 二、客户端 x86_64（Linux 服务器 / 虚拟机）
 
@@ -109,37 +73,39 @@ sh install.sh
 | 端口 | 协议 | 方向 | 说明 |
 |------|------|------|------|
 | 1993 | TCP | 入站 | Core 组网，客户端连接 |
-| 1994 | TCP | 入站 | Web 管理面板 |
 
 ```bash
 # UFW
 sudo ufw allow 1993/tcp
-sudo ufw allow 1994/tcp
 
 # firewalld
 sudo firewall-cmd --add-port=1993/tcp --permanent
-sudo firewall-cmd --add-port=1994/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
-## Web 控制端
+## 获取配网密钥和配置信息
 
-```
-地址: http://服务器IP:1994
-账户: admin
-密码: admin888
+安装脚本会把配置写入 systemd 服务文件，可通过以下方式查看：
+
+```bash
+# 查看服务启动参数（含组网名称、密钥、虚拟网段、端口）
+cat /etc/systemd/system/iconnectd.service
+
+# 查看运行时日志中的连接信息
+journalctl -u iconnectd -n 50
+
+# 查看已分配的虚拟 IP 和 peer 状态
+iconnect-cli peer list
+iconnect-cli route list
 ```
 
-- 首次登录后请立即修改密码
-- 注册功能已关闭，仅允许管理员账户
-- 如需重置密码，SSH 到服务器执行: `python3 /opt/iconnect/reset-pwd.py`
+客户端安装时需要的连接信息（服务器 IP、端口、组网名称、组网密钥）即服务端安装完成时屏幕输出的内容，建议保存。
 
 ## 端口说明
 
 | 端口 | 服务 | 说明 |
 |------|------|------|
 | 1993 | Core 组网 | 客户端连接端口 |
-| 1994 | Web 前端 | 管理面板 |
 
 ## 目录结构
 
@@ -153,12 +119,12 @@ iconnect/
 │   ├── install-client.sh     # 客户端一键安装
 │   ├── build-all.sh          # 源码构建脚本（musl 静态）
 │   ├── Dockerfile.build      # 固定构建环境镜像
-│   ├── proxy.py              # Web 代理（注入设备数据）
-│   ├── reset-pwd.py          # 密码重置脚本
+│   ├── proxy.py              # Web 代理（可选）
+│   ├── reset-pwd.py          # 密码重置脚本（可选）
 │   └── iconnect.db           # 数据库模板
 ├── dist/packages/            # 编译好的安装包
 ├── iconnectd/                # Core 源码 (Rust)
-└── iconnect-web/             # Web 管理端源码 (Rust + Vue)
+└── iconnect-web/             # Web 管理端源码 (Rust + Vue)，可选组件
 ```
 
 ## 核心特性
@@ -168,8 +134,7 @@ iconnect/
 - **适配弱网**：无需 NAT 打洞，穿透多层路由
 - **DHCP 自动分配 IP**：客户端连上即获虚拟 IP
 - **跨平台**：Linux x86_64 / OpenWrt aarch64，均使用 musl 静态链接
-- **Web 控制端**：Dashboard 设备数量、Device List 设备状态
-- **设备数据注入**：Web 面板显示真实 CLI peer list 数据
+- **CLI 管理**：通过命令行查看设备状态与配置
 - **轻量化**：适配 OpenWrt 低配置路由器
 
 ## 平台支持
@@ -185,14 +150,10 @@ iconnect/
 ```bash
 # 服务管理
 systemctl start/stop/status iconnectd
-systemctl start/stop/status iconnect-web
 
 # 查看日志
 journalctl -u iconnectd -f
 tail -f /var/log/iconnectd.log
-
-# 重置密码
-python3 /opt/iconnect/reset-pwd.py
 
 # 设备状态
 iconnect-cli peer list
@@ -202,7 +163,6 @@ iconnect-cli route list
 ## 文档
 
 - [CLI 命令行手册](dist/packages/docs/CLI.md)
-- [Web 控制端手册](dist/packages/docs/WEB.md)
 
 ## 许可证
 
