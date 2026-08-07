@@ -6,6 +6,18 @@ rustflags = ["-C", "target-feature=+crt-static"]
 linker = "aarch64-linux-musl-gcc"
 rustflags = ["-C", "target-feature=+crt-static"]
 
+# --- Android 交叉编译(NDK r26d) ---
+# 用原生 clang.exe 而非 NDK 的 .cmd 包装器,避免 rustc 链接参数被 cmd 二次解析破坏
+# 构建前需设置 NDK_HOME 环境变量指向 NDK 根目录(如 %LOCALAPPDATA%\Android\Sdk\android-ndk-r26d)
+[target.aarch64-linux-android]
+linker = "${NDK_HOME}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe"
+rustflags = [
+    "-C", "link-arg=-target",
+    "-C", "link-arg=aarch64-linux-android24",
+    "-C", "link-arg=--sysroot=${NDK_HOME}/toolchains/llvm/prebuilt/windows-x86_64/sysroot",
+]
+
+
 [env]
 # 让依赖库（openssl、dbus、sqlite 等）的 build.rs 在 musl 交叉编译时使用 musl-gcc。
 # 这些变量会被 build-all.sh 在执行时覆盖为与目标架构对应的工具链。
