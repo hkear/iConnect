@@ -5,9 +5,8 @@ target/
 # Node
 node_modules/
 
-# Distribution (keep only packages/)
-dist/*
-!dist/packages/
+# Distribution (install packages are too large for GitHub, keep local)
+dist/
 
 # IDE
 .idea/
@@ -17,4 +16,15 @@ dist/*
 .DS_Store
 Thumbs.db
 
-GLIBC_COMPATIBILITY_ISSUE.md
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/src/main/jniLibs/
+*.apk
+*.aab
+
+# Reasonix (local AI assistant data, not for public repo)
+.reasonix/
+reasonix.toml
