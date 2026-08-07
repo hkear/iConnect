@@ -124,7 +124,8 @@ iconnect/
 │   └── iconnect.db           # 数据库模板
 ├── dist/packages/            # 编译好的安装包
 ├── iconnectd/                # Core 源码 (Rust)
-└── iconnect-web/             # Web 管理端源码 (Rust + Vue)，可选组件
+├── iconnect-web/             # Web 管理端源码 (Rust + Vue)，可选组件
+└── android/                  # Android 客户端工程 (Kotlin + VpnService)
 ```
 
 ## 核心特性
@@ -144,6 +145,47 @@ iconnect/
 | Linux x86_64（musl 静态链接） | x86_64 | 服务端 + 客户端 |
 | Linux ARM64 / OpenWrt（musl 静态链接） | aarch64 | 客户端 |
 | 其他 Linux x86_64 | x86_64 | 客户端 |
+| **Android（API 24+，VpnService）** | **arm64-v8a** | **客户端（自动获取 IP）** |
+
+## Android 客户端
+
+Android 客户端基于 Rust 内核 + JNI 集成 + VpnService 实现，无需 root。
+
+- **自动获取虚拟 IP**：DHCP 从服务器网段自动分配，无需手动配置
+- **系统 VPN 接入**：标准 VpnService，Android 7.0+（API 24）可用
+- **支持**：静态 IP、子网代理（proxy CIDR）、前台服务常驻
+
+### 安装
+
+从 [Releases](https://github.com/hkear/iConnect/releases) 下载
+`iConnect-android-<version>-arm64-v8a.apk` 安装即可。
+
+### 使用
+
+1. 打开 App，填写：
+   - **服务器 IP / 端口**（默认 1993）
+   - **组网名称 / 组网密钥**（与服务端一致）
+   - **虚拟 IP**（留空 = 自动从服务器获取）
+   - **代理网段**（可选：填写后可让组网内其他节点通过本机访问对应局域网）
+2. 点击 **连接**，同意系统 VPN 授权
+3. 连接成功后在状态栏显示分配的虚拟 IP，即可访问组网内其他节点（如 `ping 10.0.0.2`）
+
+### 自行构建
+
+```bash
+# 1. 准备环境:Android NDK r26d、rustup target add aarch64-linux-android、JDK 17、Gradle 8.7+
+export NDK_HOME=/path/to/android-ndk-r26d
+
+# 2. 编译内核 .so(debug 或 release)
+bash deploy/build-android.sh release   # 产出 target/.../release/libiconnectd.so
+
+# 3. 打包 APK
+cd android && gradle assembleRelease
+# 产出 android/app/build/outputs/apk/release/app-release.apk
+```
+
+> 注意：`.cargo/config.toml` 中 Android 交叉编译使用 `${NDK_HOME}` 环境变量，
+> 构建前需设置；Android 目标为 `aarch64-linux-android`，minSdk 24。
 
 ## 管理命令
 

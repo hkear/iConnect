@@ -18,6 +18,8 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            // 测试发布:使用 debug 签名,便于直接安装验证
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

@@ -132,7 +132,8 @@ iconnect/
 │   └── iconnect.db           # Database template
 ├── dist/packages/            # Compiled installation packages
 ├── iconnectd/                # Core source code (Rust)
-└── iconnect-web/             # Web dashboard source code (Rust + Vue), optional component
+├── iconnect-web/             # Web dashboard source code (Rust + Vue), optional component
+└── android/                  # Android client project (Kotlin + VpnService)
 
 ```
 
@@ -159,6 +160,48 @@ iconnect/
 |Linux x86_64 (musl static)|x86_64|Server + Client|
 |Linux ARM64 / OpenWrt (musl static)|aarch64|Client Only|
 |Other Linux x86_64|x86_64|Client Only|
+|**Android (API 24+, VpnService)**|**arm64-v8a**|**Client (auto IP)**|
+
+## Android Client
+
+The Android client is built on the Rust core with a JNI integration layer and VpnService — **no root required**.
+
+- **Auto virtual IP**: DHCP allocates an IP from the server subnet automatically; no manual configuration needed
+- **System VPN integration**: standard VpnService, Android 7.0+ (API 24)
+- **Features**: static IP, subnet proxying (proxy CIDR), foreground service
+
+### Installation
+
+Download `iConnect-android-<version>-arm64-v8a.apk` from
+[Releases](https://github.com/hkear/iConnect/releases) and install.
+
+### Usage
+
+1. Open the app and fill in:
+   - **Server IP / Port** (default 1993)
+   - **Network name / Network secret** (must match the server)
+   - **Virtual IP** (leave empty = auto-assigned from server)
+   - **Proxy CIDRs** (optional: lets other nodes reach your local LAN through this device)
+2. Tap **Connect** and accept the system VPN prompt
+3. On success, the assigned virtual IP is shown; you can now reach other nodes
+   (e.g. `ping 10.0.0.2`)
+
+### Build from source
+
+```bash
+# 1. Prerequisites: Android NDK r26d, rustup target add aarch64-linux-android, JDK 17, Gradle 8.7+
+export NDK_HOME=/path/to/android-ndk-r26d
+
+# 2. Compile the core .so (debug or release)
+bash deploy/build-android.sh release   # outputs target/.../release/libiconnectd.so
+
+# 3. Build the APK
+cd android && gradle assembleRelease
+# outputs android/app/build/outputs/apk/release/app-release.apk
+```
+
+> Note: `.cargo/config.toml` uses the `${NDK_HOME}` env var for Android
+> cross-compilation; target is `aarch64-linux-android`, minSdk 24.
 
 ## Management Commands
 
