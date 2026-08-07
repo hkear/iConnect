@@ -12,11 +12,12 @@ export NDK="${NDK:-$LOCALAPPDATA/Android/Sdk/android-ndk-r26d}"
 export TOOLBIN="$NDK/toolchains/llvm/prebuilt/windows-x86_64/bin"
 export PROTOC="${PROTOC:-$LOCALAPPDATA/Android/tools/bin/protoc.exe}"
 
-# 注意: 链接器走 .cargo/config.toml 的 [target.aarch64-linux-android]
-# (clang.exe + link-arg, 避免 NDK .cmd 包装器的 cmd 引号问题)
-# 这里只设置 C 编译(cc crate / bindgen 用)
+# 注意: 链接器用 NDK 原生 clang.exe(而非 .cmd 包装器,避免 cmd 引号问题),
+# 通过 target 专属环境变量配置;这里只设置 C 编译(cc crate / bindgen 用)
 export CC_aarch64_linux_android="$TOOLBIN/aarch64-linux-android24-clang.cmd"
 export AR_aarch64_linux_android="$TOOLBIN/llvm-ar"
+export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$TOOLBIN/clang.exe"
+export CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS="-C link-arg=-target -C link-arg=aarch64-linux-android24 -C link-arg=--sysroot=$NDK_HOME/toolchains/llvm/prebuilt/windows-x86_64/sysroot"
 
 # --- 2. 默认 features 减去 kcp(kcp-sys 需要 libclang, 暂缺) ---
 FEATURES="wireguard,websocket,smoltcp,tun,socks5,quic,faketcp,magic-dns,zstd"
