@@ -24,6 +24,9 @@ pub mod tunnel;
 pub mod utils;
 pub mod web_client;
 
+#[cfg(target_os = "android")]
+pub mod android;
+
 #[cfg(test)]
 mod tests;
 

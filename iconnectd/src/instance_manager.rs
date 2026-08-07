@@ -317,6 +317,16 @@ impl NetworkInstanceManager {
         Ok(())
     }
 
+    /// 订阅指定实例的全局事件(DHCP IP 变化等),供移动端 UI 展示。
+    pub fn subscribe_instance_events(
+        &self,
+        instance_id: &uuid::Uuid,
+    ) -> Option<tokio::sync::broadcast::Receiver<GlobalCtxEvent>> {
+        self.instance_map
+            .get(instance_id)
+            .and_then(|instance| instance.subscribe_event())
+    }
+
     pub fn get_config_dir(&self) -> Option<&PathBuf> {
         self.config_dir.as_ref()
     }
