@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:paddingBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_server_ip"
+            android:textSize="14sp" />
+        <EditText
+            android:id="@+id/etServerIp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="例如 1.2.3.4"
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_server_port"
+            android:textSize="14sp"
+            android:layout_marginTop="12dp" />
+        <EditText
+            android:id="@+id/etServerPort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="1993"
+            android:inputType="number" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_network_name"
+            android:textSize="14sp"
+            android:layout_marginTop="12dp" />
+        <EditText
+            android:id="@+id/etNetworkName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_network_name"
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_network_secret"
+            android:textSize="14sp"
+            android:layout_marginTop="12dp" />
+        <EditText
+            android:id="@+id/etNetworkSecret"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_network_secret"
+            android:inputType="textPassword" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_virtual_ip"
+            android:textSize="14sp"
+            android:layout_marginTop="12dp" />
+        <EditText
+            android:id="@+id/etVirtualIp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="留空 = 自动从服务器获取"
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_proxy_cidrs"
+            android:textSize="14sp"
+            android:layout_marginTop="12dp" />
+        <EditText
+            android:id="@+id/etProxyCidrs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="例如 192.168.50.0/24,10.0.0.0/24(可留空)"
+            android:inputType="text" />
+
+        <Button
+            android:id="@+id/btnConnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/action_connect" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="@string/status_disconnected"
+            android:textSize="16sp" />
+    </LinearLayout>
+</ScrollView>

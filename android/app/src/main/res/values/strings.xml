@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">iConnect</string>
+    <string name="label_server_ip">服务器 IP</string>
+    <string name="label_server_port">端口</string>
+    <string name="label_network_name">组网名称</string>
+    <string name="label_network_secret">组网密钥</string>
+    <string name="label_virtual_ip">虚拟 IP</string>
+    <string name="label_proxy_cidrs">代理网段(可选)</string>
+    <string name="hint_network_name">与服务器一致的组网名称</string>
+    <string name="hint_network_secret">与服务器一致的组网密钥</string>
+    <string name="action_connect">连接</string>
+    <string name="action_disconnect">断开连接</string>
+    <string name="status_connected">状态:已连接</string>
+    <string name="status_disconnected">状态:未连接</string>
+</resources>
